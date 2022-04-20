@@ -552,9 +552,7 @@ export class EtherspotService {
     return this.setTransactionsBatchAndSend(etherspotTransactions, chain);
   }
 
-  async sendENSTransaction(
-    chain: Chain,
-  ): Promise<?TransactionResult> {
+  async sendENSTransaction(chain: Chain): Promise<?TransactionResult> {
     const sdk = this.getSdkForChain(chain);
     if (!sdk) {
       logBreadcrumb('setTransactionsBatchAndSend', 'failed: no SDK for chain set', { chain });
@@ -617,12 +615,15 @@ export class EtherspotService {
     const sdk = this.getSdkForChain(chain);
     if (!sdk) {
       logBreadcrumb(
-        'EtherspotService', 'waitForTransactionHashFromSubmittedBatch failed: no sdk instance for network name',
+        'EtherspotService',
+        'waitForTransactionHashFromSubmittedBatch failed: no sdk instance for network name',
         { chain },
       );
       // fail gracefully as transaction has been sent anyway
       return Promise.resolve();
     }
+
+    logBreadcrumb('EtherspotService', 'waitForTransactionHashFromSubmittedBatch sdk:', { sdk });
 
     let temporaryBatchSubscription;
 
@@ -630,8 +631,17 @@ export class EtherspotService {
       temporaryBatchSubscription = sdk.notifications$
         .pipe(
           map(async (notification) => {
+            logBreadcrumb('EtherspotService', 'waitForTransactionHashFromSubmittedBatch notification:', {
+              notification,
+            });
+
             if (notification.type === NotificationTypes.GatewayBatchUpdated) {
               const submittedBatch = await sdk.getGatewaySubmittedBatch({ hash: batchHash });
+              logBreadcrumb(
+                'EtherspotService',
+                'waitForTransactionHashFromSubmittedBatch submittedBatch: transaction info',
+                { submittedBatch },
+              );
 
               const failedStates = [
                 GatewayTransactionStates.Canceling,
