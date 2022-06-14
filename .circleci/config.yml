@@ -107,6 +107,19 @@ aliases:
       name: Restore android gems cache
       keys:
         - android-gems-{{ checksum "./android/Gemfile" }}
+  - &node_swap_version
+    run:
+      name: Swap node version to 16.15.1
+      command: |
+        set +e
+        wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+        export NVM_DIR="$HOME/.nvm"
+        [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+        [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+        nvm install 16.15.1
+        nvm alias default 16.15.1
+        echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+        echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
   - &node_restore_cache
     restore_cache:
       name: Restore node modules cache
@@ -264,6 +277,8 @@ jobs:
             aws --region $AWS_DEFAULT_REGION s3 cp $NONPROD_KEYSTORE_S3_BUCKET/ios_appcenter.txt .
 
       - *homebrew_install
+
+      - *node_swap_version
 
       - *node_restore_cache
 
